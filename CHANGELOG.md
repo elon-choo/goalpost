@@ -11,3 +11,13 @@ Initial release. Portable, distributable extraction and upgrade of the author's 
 - **Templates** — ledger, roadmap, and a production-readiness rubric that operationalizes "no human needs to touch this again".
 - **Portability** — host-agnostic core, Codex-availability auto-detection with graceful Claude-only fallback, optional host adapters (e.g. macOS protected-folder access) detected by `scripts/preflight.sh`.
 - Packaged as a Claude Code plugin with its own marketplace manifest.
+
+## 0.1.1
+
+Project-boundary hardening after a real cross-project incident (an orchestrator run in a ledger-less folder silently adopted another project's newest ledger and killed that project's legitimate session):
+
+- **Principle 8 — the project boundary is absolute.** Ledgers are discovered, selected, and created only inside the target repo (user-named path → `git rev-parse --show-toplevel` → cwd). No ledger in the repo → stop and ask; never widen the search to other projects, shared doc folders, recall, or memory.
+- RUN integrity check now requires the ledger's `Target repo:` header to match the current project (a mirrored/foreign ledger is refused).
+- PLAN's widened SSOT auto-discovery explicitly never selects a ledger.
+- Mirrored ledger copies get a first-line `READ-ONLY COPY — never RUN from this file` marker.
+- Session conflicts are reported, never resolved by killing another session/process.

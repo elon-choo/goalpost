@@ -21,3 +21,12 @@ Project-boundary hardening after a real cross-project incident (an orchestrator 
 - PLAN's widened SSOT auto-discovery explicitly never selects a ledger.
 - Mirrored ledger copies get a first-line `READ-ONLY COPY — never RUN from this file` marker.
 - Session conflicts are reported, never resolved by killing another session/process.
+
+## 0.1.2
+
+Round-3 review closures (boundary residuals):
+
+- Unresolved target repo (non-git parent cwd containing multiple projects) → ask, never sweep the subtree.
+- `Target repo:` match compares tilde-expanded/realpath-normalized paths; a missing/unreadable header fails closed.
+- A `READ-ONLY COPY` first-line marker disqualifies a ledger; even a user-named ledger path must sit inside the target repo.
+- PLAN's SSOT auto-discovery adds an ownership check — a foreign project's roadmap/spec is confirmed with the user before adoption.

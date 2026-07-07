@@ -1,0 +1,15 @@
+{
+  "name": "goalpost",
+  "owner": {
+    "name": "funnelbank.ai"
+  },
+  "description": "Goalpost — autonomous stage x goal orchestration for Claude Code with Codex delegation.",
+  "plugins": [
+    {
+      "name": "goalpost",
+      "source": "./",
+      "description": "Plan a project into a stage x goal roadmap with hard acceptance gates, then run it hands-off with a persistent ledger, delegating engineering goals to Codex and creative goals to Claude Code.",
+      "keywords": ["orchestration", "autonomous", "codex", "roadmap", "ledger"]
+    }
+  ]
+}

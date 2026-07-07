@@ -30,3 +30,11 @@ Round-3 review closures (boundary residuals):
 - `Target repo:` match compares tilde-expanded/realpath-normalized paths; a missing/unreadable header fails closed.
 - A `READ-ONLY COPY` first-line marker disqualifies a ledger; even a user-named ledger path must sit inside the target repo.
 - PLAN's SSOT auto-discovery adds an ownership check — a foreign project's roadmap/spec is confirmed with the user before adoption.
+
+## 0.1.3
+
+Second incident post-mortem closures + public release:
+
+- **Ban the "most active ledger" heuristic.** When no ledger exists in the target repo, candidates seen elsewhere may be listed for reference, but the user chooses — recall/memory "activity" never selects a ledger (it picks the machine's busiest project, not the one the user meant).
+- **Ownership-signal rule.** A fresh Session-claim / minutes-old updates / `[~]` rows / a live process mean the ledger already has an owner and is not yours to run — never inverted into "a duplicate to clean up".
+- Repository published publicly; manifest/README URLs point to the real remote; README gains a "For AI agents" install section (install from just the repo URL).

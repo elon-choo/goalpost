@@ -47,22 +47,33 @@ bash scripts/preflight.sh
 
 ## Install
 
-Local (works today, from a clone of this repo):
+From GitHub (this repo is its own plugin marketplace):
+
+```
+/plugin marketplace add elon-choo/goalpost
+/plugin install goalpost@goalpost
+```
+
+From a local clone (offline / development):
 
 ```bash
-# add the clone as a local marketplace, then install
 /plugin marketplace add ./goalpost
 /plugin install goalpost@goalpost
 # or run without installing:
 claude --plugin-dir ./goalpost
 ```
 
-From a published GitHub marketplace (once this repo is pushed to `funnelbank/goalpost`):
+### For AI agents (install from just this URL)
 
-```
-/plugin marketplace add funnelbank/goalpost
-/plugin install goalpost@goalpost
-```
+If a user hands you this repository URL and asks you to install it, do exactly this inside Claude Code:
+
+1. Run `claude plugin marketplace add elon-choo/goalpost` (or the full URL `https://github.com/elon-choo/goalpost`).
+2. Run `claude plugin install goalpost@goalpost`.
+3. Verify: `claude plugin details goalpost@goalpost` should list 4 skills/commands (`goalpost`, `goal`, `roadmap`, `run`) and 2 agents (`goal-worker`, `transition-reviewer`).
+4. Optionally run the capability check: `bash scripts/preflight.sh` from a clone — it reports whether the Codex MCP (engineering worker) is available; without it the plugin still works in Claude-only mode.
+5. Tell the user to restart Claude Code, then trigger with "make a goal roadmap" (PLAN) or "run the ledger hands-off" (RUN), or the explicit commands `/goalpost:roadmap` and `/goalpost:run`.
+
+Prerequisite for full functionality: the user's own Codex CLI logged in via OAuth (`codex login`) and exposed to Claude Code as an MCP server named `codex`. This plugin never bundles credentials.
 
 ## Migration — if you already have a general-purpose `goal-orchestrator` skill
 

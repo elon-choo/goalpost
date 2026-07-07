@@ -24,7 +24,7 @@ main session = orchestrator (dispatch only, re-reads the ledger every cycle)
 Two modes:
 
 - **PLAN** — decompose the project into 5–10 stages, each with 8–12 *atomic* goals. Every goal carries a routing tag and a Definition of Done: `[codex]` goals get an executable DoD (a command with an observable pass/fail); `[claude]` goals get a checklist DoD scored by a fresh reviewer. The plan is written as a roadmap doc plus a `LEDGER.md`.
-- **RUN** — load the newest ledger and drain its goals one at a time. Each goal: dispatch → **independently verify the DoD** → on failure re-dispatch with the evidence (3 strikes) → close only on a passing check. At each stage boundary: integration review GO → transition review → generate the next stage's detail.
+- **RUN** — load the newest ledger **in the target repo** (never another project's; a repo with no ledger stops and asks) and drain its goals one at a time. Each goal: dispatch → **independently verify the DoD** → on failure re-dispatch with the evidence (3 strikes) → close only on a passing check. At each stage boundary: integration review GO → generate the next stage's detail → transition review (which also vets the freshly generated DoDs).
 
 The ledger makes the whole thing compaction-proof and multi-session: a fresh session with the instruction "keep going" picks up exactly where the last one stopped.
 
@@ -91,7 +91,7 @@ Goalpost reads your spec/brief (or asks a couple of questions), writes the roadm
 
 > "Keep going from the ledger." / "Run it autonomously while I'm away." / "다음 goal 이어서."
 
-Goalpost loads the newest ledger, declares the start point and stop conditions in one line, and drains goals — engineering to Codex, creative to Claude — until it hits a human-decision gate, then reports.
+Goalpost loads the newest ledger **inside the current project's repo only** (a repo with no ledger stops and asks — it never adopts another project's ledger), declares the start point and stop conditions in one line, and drains goals — engineering to Codex, creative to Claude — until it hits a human-decision gate, then reports.
 
 **Run a single goal manually:**
 
@@ -119,6 +119,8 @@ The core flow is host-agnostic and keeps work in normal repo paths. Machine-spec
 |---|---|
 | `skills/goalpost/SKILL.md` | The orchestrator (PLAN + RUN). |
 | `commands/goal.md` | `/goalpost:goal` — single-goal executor with routing + acceptance loop. |
+| `commands/roadmap.md` | `/goalpost:roadmap` — explicit PLAN entry point. |
+| `commands/run.md` | `/goalpost:run` — explicit RUN entry point. |
 | `agents/goal-worker.md` | Isolated creative/planning worker (returns summary + evidence only). |
 | `agents/transition-reviewer.md` | Independent stage-gate reviewer (GO / NO-GO, no edits). |
 | `skills/goalpost/templates/` | Ledger, roadmap, and production-readiness rubric. |

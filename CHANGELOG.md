@@ -38,3 +38,12 @@ Second incident post-mortem closures + public release:
 - **Ban the "most active ledger" heuristic.** When no ledger exists in the target repo, candidates seen elsewhere may be listed for reference, but the user chooses — recall/memory "activity" never selects a ledger (it picks the machine's busiest project, not the one the user meant).
 - **Ownership-signal rule.** A fresh Session-claim / minutes-old updates / `[~]` rows / a live process mean the ledger already has an owner and is not yours to run — never inverted into "a duplicate to clean up".
 - Repository published publicly; manifest/README URLs point to the real remote; README gains a "For AI agents" install section (install from just the repo URL).
+
+## 0.1.4
+
+Public-release triple-audit closures (docs accuracy H/M + parity):
+
+- README stage-boundary order corrected to G x.9 → G x.10 → G x.9.5 (the transition review vets the freshly generated DoDs) — the doc no longer contradicts the skill.
+- README/run.md "newest ledger" phrasing qualified with the project-boundary rule (in-repo only; no ledger → stop and ask).
+- run.md gains the unresolved-parent-cwd guard (parity with SKILL.md).
+- Components table lists all three commands; host-adapter wording made machine-neutral.

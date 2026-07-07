@@ -1,7 +1,7 @@
 {
   "name": "goalpost",
   "displayName": "Goalpost — autonomous goal orchestrator",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Plan a project as a stage x goal roadmap with hard per-goal acceptance gates, then run it hands-off: a persistent ledger drives an orchestrator that delegates engineering goals to the Codex MCP and creative/marketing goals to Claude Code, verifying every goal's Definition of Done before advancing and stopping only at genuine human-decision gates.",
   "author": {
     "name": "funnelbank.ai"

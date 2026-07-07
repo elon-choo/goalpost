@@ -110,7 +110,7 @@ This plugin supersedes a standalone local `goal-orchestrator` skill and shares i
 
 ## Host adapters (machine-specific, optional)
 The core flow is host-agnostic. A machine may need adapters the preflight detects:
-- **Protected-folder file access:** if a launchd/daemon bridge blocks direct tool access to `~/Documents`/`~/Desktop`/`~/Downloads` with EPERM, and a target path is under one of those, route reads/writes through the host's adapter (this machine: `docbroker` — ops list/stat/mkdir/read/write/cp-out/cp-in/delete, no exec; Bash-less agents get a `cp-out` /tmp copy). No adapter + EPERM → mark the item unverified; do not infer.
+- **Protected-folder file access:** if a launchd/daemon bridge blocks direct tool access to `~/Documents`/`~/Desktop`/`~/Downloads` with EPERM, and a target path is under one of those, route reads/writes through the host's adapter (e.g. `docbroker` where installed — ops list/stat/mkdir/read/write/cp-out/cp-in/delete, no exec; Bash-less agents get a `cp-out` /tmp copy). No adapter + EPERM → mark the item unverified; do not infer.
 - **Briefing language / doc-save location / recall search** are host conventions read from the machine's own instructions, not hard-coded here.
 
 ## Relationship to other skills

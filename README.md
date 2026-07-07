@@ -23,7 +23,7 @@ main session = orchestrator (dispatch only, re-reads the ledger every cycle)
 
 Two modes:
 
-- **PLAN** — decompose the project into 5–10 stages, each with 8–12 *atomic* goals. Every goal carries a routing tag (`[codex]` / `[claude]`) and an executable Definition of Done. The plan is written as a roadmap doc plus a `LEDGER.md`.
+- **PLAN** — decompose the project into 5–10 stages, each with 8–12 *atomic* goals. Every goal carries a routing tag and a Definition of Done: `[codex]` goals get an executable DoD (a command with an observable pass/fail); `[claude]` goals get a checklist DoD scored by a fresh reviewer. The plan is written as a roadmap doc plus a `LEDGER.md`.
 - **RUN** — load the newest ledger and drain its goals one at a time. Each goal: dispatch → **independently verify the DoD** → on failure re-dispatch with the evidence (3 strikes) → close only on a passing check. At each stage boundary: integration review GO → transition review → generate the next stage's detail.
 
 The ledger makes the whole thing compaction-proof and multi-session: a fresh session with the instruction "keep going" picks up exactly where the last one stopped.

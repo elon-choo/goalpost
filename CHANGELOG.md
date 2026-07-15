@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+Ship the destructive-action guardrail as a real, optional enforcement hook (it was prose-only in 0.2.0).
+
+- **`scripts/codex-safety-gate.sh`** — an optional `PreToolUse` hook for the `mcp__codex__*` tools. It lets `read-only`/`workspace-write` calls through and, on a `danger-full-access` call, blocks (exit 2, with a re-scope instruction) if the task carries a hard destructive token (`rm -rf`, `DROP TABLE`, `DELETE FROM`, `git push --force`, `migrate reset`, …) or an explicit `GOALPOST-LANE: destructive` marker. This turns the guardrail from a prompt-level "second wall" into a "first wall" that refuses the tool call. Fail-open by design; override with `CODEX_GUARD_OFF=1`.
+- The guardrail block is now injected wrapped in `<<<GOALPOST-GUARDRAIL>>> … <<<END-GOALPOST-GUARDRAIL>>>` delimiters so the hook strips it before scanning (the guardrail's own forbidden-token list never false-positives), and destructive-capable dispatches carry a `GOALPOST-LANE: destructive` marker. `templates/model-routing.md` documents the wire-up; README has an install snippet.
+
 ## 0.2.0
 
 Model-aware orchestration — right-size the model per goal for productivity without lowering the completeness bar, and harden against the flagship's destructive-action tendency.

@@ -44,6 +44,21 @@ Pick the tier by **blast radius × variance**, route on the stronger signal (LOW
 
 **Destructive-action safety.** GPT-5.6 Sol is documented to interpret instructions broadly and take destructive actions (deleting files/data, using credentials) unless explicitly forbidden. Goalpost injects an allow/deny guardrail into every Codex dispatch (no deletes/destructive-git/real-sends/credential-use without explicit + human authorization; operate only on *named* targets, never a similar-looking substitute; a binding STOP-WHEN condition), and **isolates any destructive-capable goal into its own gated goal** (`workspace-write` + `on-request`, or a human gate) instead of bundling it. The fast host default is kept only for ordinary edits — the sandbox wall stays under the prompt guardrail on destructive lanes.
 
+**Optional hard enforcement (`scripts/codex-safety-gate.sh`).** The guardrail above is a prompt-level contract. For a *machine-enforced* wall, wire the bundled `PreToolUse` hook — it refuses a destructive-capable Codex call on the `danger-full-access` lane before it runs:
+
+```bash
+cp scripts/codex-safety-gate.sh ~/.claude/hooks/ && chmod +x ~/.claude/hooks/codex-safety-gate.sh
+```
+
+Then append to `hooks.PreToolUse` in `~/.claude/settings.json` (do not overwrite existing entries):
+
+```json
+{ "matcher": "mcp__codex__.*",
+  "hooks": [ { "type": "command", "command": "$HOME/.claude/hooks/codex-safety-gate.sh", "timeout": 10 } ] }
+```
+
+It lets `read-only`/`workspace-write` calls through and blocks (exit 2) a `danger-full-access` call carrying a hard destructive token or a `GOALPOST-LANE: destructive` marker, with a re-scope instruction. Fail-open by design; override an intentional one-off with `CODEX_GUARD_OFF=1`.
+
 ## Prerequisites
 
 - **Claude Code** ≥ 2.1 (plugin support with `skills/`, `commands/`, `agents/`).
@@ -142,6 +157,7 @@ The core flow is host-agnostic and keeps work in normal repo paths. Machine-spec
 | `skills/goalpost/templates/model-routing.md` | Model-tier rubric (blast radius × variance → Sol/Terra/Luna), escalation ladder, and the Sol destructive-action guardrail. |
 | `skills/goalpost/templates/` | Ledger, roadmap, and production-readiness rubric. |
 | `scripts/preflight.sh` | Read-only capability detector. |
+| `scripts/codex-safety-gate.sh` | Optional `PreToolUse` hook — hard-blocks a destructive-capable Codex call on the full-access lane. |
 
 ## License
 

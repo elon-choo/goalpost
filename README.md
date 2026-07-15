@@ -1,6 +1,6 @@
 # Goalpost
 
-**Plan a project as a stage × goal roadmap with hard per-goal acceptance gates, then run it hands-off.** A persistent ledger drives an orchestrator that delegates engineering goals to the [Codex](https://github.com/openai/codex) MCP and creative/marketing goals to Claude Code, verifies every goal's Definition of Done on real evidence before advancing, runs an independent review at every stage boundary, and stops only at genuine human-decision gates.
+**Plan a project as a stage × goal roadmap with hard per-goal acceptance gates, then run it hands-off.** A persistent ledger drives an orchestrator that delegates engineering goals to the [Codex](https://github.com/openai/codex) MCP — **right-sizing each goal across GPT-5.6 Sol / Terra / Luna by its blast radius** — and creative/marketing goals to Claude Code, verifies every goal's Definition of Done on real evidence before advancing, runs an independent review at every stage boundary, and stops only at genuine human-decision gates.
 
 It is the discipline of "break the work into atomic goals, and don't advance until each one is genuinely production-ready" turned into a Claude Code plugin that anyone can install.
 
@@ -16,17 +16,33 @@ Long builds fail in two opposite ways: the agent *runs away* (marks things done 
 ```
 main session = orchestrator (dispatch only, re-reads the ledger every cycle)
       │
-      ├── engineering goal ──▶ Codex MCP        (implementation, tests, infra, data)
+      ├── engineering goal ──▶ Codex MCP    ── sol   (hard + critical: security, migrations, refactors, final review)
+      │                                      ── terra (default workhorse: features, integrations, bug fixes)
+      │                                      ── luna  (easy + low-variance: boilerplate, fixtures, docs, tests)
       ├── creative goal   ──▶ Claude Code       (marketing, naming, positioning, planning)
       └── stage boundary  ──▶ transition-reviewer (independent GO / NO-GO gate)
 ```
 
 Two modes:
 
-- **PLAN** — decompose the project into 5–10 stages, each with 8–12 *atomic* goals. Every goal carries a routing tag and a Definition of Done: `[codex]` goals get an executable DoD (a command with an observable pass/fail); `[claude]` goals get a checklist DoD scored by a fresh reviewer. The plan is written as a roadmap doc plus a `LEDGER.md`.
+- **PLAN** — decompose the project into 5–10 stages, each with 8–12 *atomic* goals. Every goal carries a two-axis routing tag `[<platform>:<model>]` (platform + model tier, chosen by blast radius × variance — see [Model routing](#model-routing)) and a Definition of Done: `[codex]` goals get an executable DoD (a command with an observable pass/fail); `[claude]` goals get a checklist DoD scored by a fresh reviewer. The plan is written as a roadmap doc plus a `LEDGER.md`.
 - **RUN** — load the newest ledger **in the target repo** (never another project's; a repo with no ledger stops and asks) and drain its goals one at a time. Each goal: dispatch → **independently verify the DoD** → on failure re-dispatch with the evidence (3 strikes) → close only on a passing check. At each stage boundary: integration review GO → generate the next stage's detail → transition review (which also vets the freshly generated DoDs).
 
 The ledger makes the whole thing compaction-proof and multi-session: a fresh session with the instruction "keep going" picks up exactly where the last one stopped.
+
+## Model routing
+
+Not every goal needs the flagship. Running the top model for boilerplate is slower and costlier with no quality gain; running a weak model on a security change is a liability. Goalpost assigns each goal a model tier at plan time and applies it at run time — the full rubric is `skills/goalpost/templates/model-routing.md`.
+
+| Tier | Codex model | Use it for | Default effort |
+|---|---|---|---|
+| `sol` | `gpt-5.6-sol` | **Hard + critical only** — security/auth/payments, migrations & destructive-capable work, schema, concurrency/perf, cross-cutting refactors, external-API contracts, architecture, final integration/security review. The escalation ceiling. | `ultra` |
+| `terra` | `gpt-5.6-terra` | **Default workhorse** — feature implementation, API/DB/integration logic, ordinary bug fixes, medium PR review. | `high` |
+| `luna` | `gpt-5.6-luna` | **Easy + low-variance** — boilerplate/CRUD, fixtures/mocks, tests on a pattern, docs, mechanical edits. | `high` / `xhigh` |
+
+Pick the tier by **blast radius × variance**, route on the stronger signal (LOW+LOW → Luna; MED → Terra; HIGH → Sol), and **never downgrade a security/data/payment/migration goal to save cost**. A DoD strike **escalates one tier up** (Luna→Terra→Sol) rather than repeating the same tier; the 3-strike cap is unchanged. Independent, disjoint-file goals — and `[fanout]` goals with a per-sub-task tier map — run concurrently at right-sized tiers via a single Workflow level.
+
+**Destructive-action safety.** GPT-5.6 Sol is documented to interpret instructions broadly and take destructive actions (deleting files/data, using credentials) unless explicitly forbidden. Goalpost injects an allow/deny guardrail into every Codex dispatch (no deletes/destructive-git/real-sends/credential-use without explicit + human authorization; operate only on *named* targets, never a similar-looking substitute; a binding STOP-WHEN condition), and **isolates any destructive-capable goal into its own gated goal** (`workspace-write` + `on-request`, or a human gate) instead of bundling it. The fast host default is kept only for ordinary edits — the sandbox wall stays under the prompt guardrail on destructive lanes.
 
 ## Prerequisites
 
@@ -123,6 +139,7 @@ The core flow is host-agnostic and keeps work in normal repo paths. Machine-spec
 | `commands/run.md` | `/goalpost:run` — explicit RUN entry point. |
 | `agents/goal-worker.md` | Isolated creative/planning worker (returns summary + evidence only). |
 | `agents/transition-reviewer.md` | Independent stage-gate reviewer (GO / NO-GO, no edits). |
+| `skills/goalpost/templates/model-routing.md` | Model-tier rubric (blast radius × variance → Sol/Terra/Luna), escalation ladder, and the Sol destructive-action guardrail. |
 | `skills/goalpost/templates/` | Ledger, roadmap, and production-readiness rubric. |
 | `scripts/preflight.sh` | Read-only capability detector. |
 

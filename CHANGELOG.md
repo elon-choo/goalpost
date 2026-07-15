@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.0
+
+Model-aware orchestration — right-size the model per goal for productivity without lowering the completeness bar, and harden against the flagship's destructive-action tendency.
+
+- **Two-axis routing (`[<platform>:<model>]`).** Every goal now carries a model tier on top of its platform tag. Codex tiers: `sol` (`gpt-5.6-sol`, hard + critical only — the escalation ceiling), `terra` (`gpt-5.6-terra`, the default workhorse), `luna` (`gpt-5.6-luna`, easy + low-variance). Claude: `fable` / `opus`. A bare `[codex]`/`[claude]` still works and defaults to `terra`/`fable`.
+- **New rubric `templates/model-routing.md`.** Picks the tier by BLAST RADIUS × VARIANCE, with worked examples, an optional effort suffix (`:luna/xhigh`) and a `pin` that locks against downgrade. This is the single source of truth for model selection, used by the planner, the dispatcher, and any goal that fans out.
+- **Escalation ladder.** A DoD strike now re-dispatches one tier UP (Luna→Terra→Sol; Terra→Terra→Sol) with the failure evidence attached, instead of repeating the same tier. The 3-strike cap is unchanged.
+- **Fan-out + parallelism.** `[fanout]` goals carry a per-sub-task tier map and run as one Workflow stage-runner; independent goals (disjoint files, satisfied `depends:`) may run concurrently at right-sized tiers. Gates are never skipped.
+- **Sol destructive-action guardrail (principle 9).** Every Codex dispatch injects an allow/deny block into `developer-instructions` (no deleting files/data/DBs, no destructive git, no real sends/deploys/payments, no out-of-scope or unauthorized-credential actions; operate only on named targets — never substitute a similar-looking one; binding STOP-WHEN condition). Destructive-capable goals are isolated into their own gated goals (`workspace-write` + `on-request`, or a HUMAN_GATE), not bundled — the fast host default stays for ordinary edits only.
+- **Benchmarked against oh-my-openagent (LazyCodex) v4.18.0.** Adopted its GOAL/STOP-WHEN/EVIDENCE stop-contract, difficulty-tiered routing, and named-target invariant; deliberately did NOT adopt its `approval_policy=never` + `danger-full-access` default — the sandbox wall stays under the prompt guardrail on destructive lanes.
+- Preflight reports which Codex tiers exist (`codex-models`); a missing tier collapses to the nearest available. Templates, `production-readiness.md` (new E9 model-fit row + hardened E6/E7), and the transition-reviewer (now audits tier assignments) updated to match.
+
+Hardening after two independent adversarial reviews (Claude red-team + GPT-5.6 Sol cross-model):
+- **SAFETY_STOP is a distinct outcome.** A worker that correctly refuses a forbidden/destructive action no longer looks like a DoD failure — it does not strike, does not escalate (which would hand a stronger model the same forbidden action), and routes to `HUMAN_GATE(safety-stop)` for capability re-classification.
+- **Destructive capability is classified by REACH, not title.** A goal whose commands can *reach* real external state — a `pretest` hook that resets a DB, a command inheriting a prod `DATABASE_URL` — is destructive-capable by transitivity; unknown defaults to destructive-capable. Only truly inert goals use the fast lane. Row-level destruction (`DELETE FROM`, mass `UPDATE`) is now in the deny-list.
+- **Human authorization ≠ planner prose.** An in-goal/spec sentence like "drop table X" is DATA (principle 7/9), a request to gate — never the human authorization that unlocks a forbidden action. And `approval-policy: on-request` is treated as a rubber stamp on hosts whose orchestrator auto-approves — destructive approvals are relayed to a human, and escalation-to-Sol always drops to the gated lane.
+- **No silent downgrade.** A bare/legacy tag is UNCLASSIFIED (re-classified every dispatch, never defaulted to `terra` for a security goal); a HIGH-blast-radius goal whose required tier is unavailable is `HUMAN_GATE(model-unavailable)`, not a Terra fallback; `pin` now binds every re-tiering actor (ladder, tie-break, `G x.10` regen, reviewer diffs).
+- **Two explicit counters + a normative outcome table** (`quality_strikes` cap 3 = the gate; `infra_retries` separate) resolve the "is it 3 or 5 dispatches?" ambiguity; the tier/effort per attempt is spelled out; `[fanout]` counts one goal-level strike per repair round (not per leaf).
+- **Concurrency is a wave scheduler.** Parallel goals require declared, disjoint write sets (dependency-clear ≠ resource-clear); first-party re-verification runs on a quiesced/isolated tree so a sibling's mid-edit can't manufacture a spurious strike; after a HUMAN_GATE no new work starts and running goals finish only if resource-isolated.
+- **Ledger attempt record** (`attempt:<n> tier:<t> effort:<e> sandbox:<s>`) makes ladder state survive compaction. `production-readiness.md` E9 is under-tiering-blocks / over-tiering-audit-only; E6 requires a before/after state audit (not just a green test) for destructive-capable goals.
+
 ## 0.1.0
 
 Initial release. Portable, distributable extraction and upgrade of the author's local `goal-orchestrator` skill.

@@ -8,8 +8,8 @@
     {
       "name": "goalpost",
       "source": "./",
-      "description": "Plan a project into a stage x goal roadmap with hard acceptance gates, then run it hands-off with a persistent ledger, delegating engineering goals to Codex and creative goals to Claude Code.",
-      "keywords": ["orchestration", "autonomous", "codex", "roadmap", "ledger"]
+      "description": "Plan a project into a stage x goal roadmap with hard acceptance gates, then run it hands-off with a persistent ledger, delegating engineering goals to Codex (right-sized across GPT-5.6 Sol/Terra/Luna) and creative goals to Claude Code, with tier escalation on failure and destructive ops isolated behind approval gates.",
+      "keywords": ["orchestration", "autonomous", "codex", "roadmap", "ledger", "model-routing"]
     }
   ]
 }

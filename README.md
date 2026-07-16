@@ -1,4 +1,44 @@
-# Goalpost
+# 🥅 Goalpost
+
+*A disciplined project manager for an AI coding agent: it breaks a project into small, verified goals, builds them hands-off, and keeps a powerful-but-reckless model on a short leash.*
+
+![version](https://img.shields.io/badge/version-0.3.0-2563eb) ![license](https://img.shields.io/badge/license-MIT-16a34a) ![platform](https://img.shields.io/badge/Claude%20Code-plugin-7c3aed) &nbsp; **Install:** `/plugin install goalpost@goalpost`
+
+---
+
+## What it is (30-second version)
+
+You hand Goalpost a project. It breaks the work into small, numbered **goals**, decides which AI model each goal deserves (a cheap fast one for boilerplate; the expensive flagship only for the risky stuff), then **builds them one at a time** — proving each goal actually works before it moves on, and pausing only when it genuinely needs a human decision. A single **ledger file** is the source of truth, so the work survives restarts and a fresh session picks up exactly where the last one stopped.
+
+Think of it as the discipline *"break the work into steps, and don't move on until each step is truly done"* turned into a Claude Code plugin — with a safety layer that stops a broadly-instructed model (GPT-5.6 Sol) from deleting your files or data.
+
+**What you get**
+
+- 🎯 **No fake "done".** Every goal is verified against real evidence — a test that ran, a build that passed — before it advances. No "looks good, moving on."
+- ⚡ **Right-sized cost.** Each goal runs on the cheapest capable model; the flagship is reserved for hard/critical work, so you don't pay top rates for boilerplate.
+- 🛡️ **Safe by default.** Destructive work is sandboxed and gated. In 0.3.0 the safety layer was itself *measured and hardened* against real destructive-AI incidents — and it's honest about what it can't catch (see the [release notes](docs/RELEASE-NOTES-v0.3.0.md)).
+
+## Get started in ~1 minute
+
+**🤖 Using an AI coding agent (Claude Code, Cursor, etc.)?** Just paste this repo's link into the agent and say **"install this plugin and show me how to use it."** The agent will follow the [For AI agents](#for-ai-agents-install-from-just-this-url) steps below — it installs itself and guides you. Nothing else to do.
+
+**✋ Prefer to do it by hand?** Inside Claude Code:
+
+```
+/plugin marketplace add elon-choo/goalpost
+/plugin install goalpost@goalpost
+```
+
+Then just say what you want:
+
+> **"Break this project into a goal roadmap."** → it plans (PLAN mode).
+> **"Run the ledger hands-off."** → it builds, one verified goal at a time (RUN mode).
+
+Full walkthrough in [Use](#use). One prerequisite for the engineering goals — your own [Codex login](#prerequisites) — is explained below.
+
+---
+
+## The details
 
 **Plan a project as a stage × goal roadmap with hard per-goal acceptance gates, then run it hands-off.** A persistent ledger drives an orchestrator that delegates engineering goals to the [Codex](https://github.com/openai/codex) MCP — **right-sizing each goal across GPT-5.6 Sol / Terra / Luna by its blast radius** — and creative/marketing goals to Claude Code, verifies every goal's Definition of Done on real evidence before advancing, runs an independent review at every stage boundary, and stops only at genuine human-decision gates.
 
@@ -113,15 +153,26 @@ claude --plugin-dir ./goalpost
 
 ### For AI agents (install from just this URL)
 
-If a user hands you this repository URL and asks you to install it, do exactly this inside Claude Code:
+**If a user hands you this repository URL and asks you to install it or set it up, do exactly this — then guide them.**
+
+**Install (inside Claude Code):**
 
 1. Run `claude plugin marketplace add elon-choo/goalpost` (or the full URL `https://github.com/elon-choo/goalpost`).
 2. Run `claude plugin install goalpost@goalpost`.
-3. Verify: `claude plugin details goalpost@goalpost` should list 4 skills/commands (`goalpost`, `goal`, `roadmap`, `run`) and 2 agents (`goal-worker`, `transition-reviewer`).
-4. Optionally run the capability check: `bash scripts/preflight.sh` from a clone — it reports whether the Codex MCP (engineering worker) is available; without it the plugin still works in Claude-only mode.
-5. Tell the user to restart Claude Code, then trigger with "make a goal roadmap" (PLAN) or "run the ledger hands-off" (RUN), or the explicit commands `/goalpost:roadmap` and `/goalpost:run`.
+3. Verify: `claude plugin details goalpost@goalpost` should list the `goalpost` skill plus 3 commands (`goal`, `roadmap`, `run`) and 2 agents (`goal-worker`, `transition-reviewer`).
+4. Check capabilities: `bash scripts/preflight.sh` from a clone — it reports whether the **Codex MCP** (the engineering worker) is available. Without it the plugin still works in **Claude-only mode** at lower engineering throughput; tell the user this if Codex is missing.
+5. Tell the user to **restart Claude Code** so the plugin loads.
 
-Prerequisite for full functionality: the user's own Codex CLI logged in via OAuth (`codex login`) and exposed to Claude Code as an MCP server named `codex`. This plugin never bundles credentials.
+**Then guide the user (don't just stop at "installed"):**
+
+6. Explain in one line what they now have: *"Goalpost plans a project into small verified goals and builds them hands-off — say what you want built."*
+7. Offer the two entry points in plain language:
+   - To **plan**: they say *"break this project into a stage × goal roadmap"* (or `/goalpost:roadmap`). You'll produce a roadmap + a `docs/LEDGER-*.md`.
+   - To **build hands-off**: they say *"run the ledger hands-off"* (or `/goalpost:run`). You'll drain goals one at a time, verifying each, stopping only at real human-decision gates.
+   - For a **single goal**: `/goalpost:goal <what to do>`.
+8. Flag the one prerequisite for full power (below) if it's not set up, and offer to help set it up.
+
+**Prerequisite for full functionality:** the user's own Codex CLI logged in via OAuth (`codex login`) and exposed to Claude Code as an MCP server named `codex` (so the `mcp__codex__codex` tool exists). **This plugin never bundles or asks for credentials — it uses the user's own Codex login.** If the user wants engineering goals to run on the strong coding model, walk them through `npm i -g @openai/codex && codex login` and adding it as an MCP server; otherwise confirm they're fine with Claude-only mode.
 
 ## Migration — if you already have a general-purpose `goal-orchestrator` skill
 

@@ -1,3 +1,17 @@
 .DS_Store
 *.log
 node_modules/
+
+# S3/S4/S5 ephemeral run evidence (regenerable; the harness + tests are committed, the run outputs are not)
+test/*.out
+test/run-report.json
+test/run-report.md
+test/cost-report.json
+test/cost-report.md
+test/ledger.actual.json
+# working ledger (per-run SSOT state; the roadmap + findings docs are the shipped record)
+docs/LEDGER-*.md
+# but DO ship the guard-log fixture the parser tests need
+!test/fixtures/codex-guard.sample.log
+# run-specific tool (hardcodes the ~/work/gp-synth-target path; not a plugin feature)
+test/gp-synth-disposability-check.sh

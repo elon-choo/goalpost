@@ -57,7 +57,24 @@ Then append to `hooks.PreToolUse` in `~/.claude/settings.json` (do not overwrite
   "hooks": [ { "type": "command", "command": "$HOME/.claude/hooks/codex-safety-gate.sh", "timeout": 10 } ] }
 ```
 
-It lets `read-only`/`workspace-write` calls through and blocks (exit 2) a `danger-full-access` call carrying a hard destructive token or a `GOALPOST-LANE: destructive` marker, with a re-scope instruction. Fail-open by design; override an intentional one-off with `CODEX_GUARD_OFF=1`.
+It lets `read-only`/`workspace-write` calls through and blocks (exit 2) a `danger-full-access` call carrying a hard destructive token or a `GOALPOST-LANE: destructive` marker, with a re-scope instruction. Fail-open by design; override an intentional one-off with `CODEX_GUARD_OFF=1` (or a single-use override file).
+
+**What the hook catches — and what it does NOT (0.3.0, read this).** The hook catches, on the full-access lane: literal destructive tokens (`rm -rf`, `DROP TABLE`, `DELETE FROM`, `git push --force`, …); an explicit `gpt-5.6-sol` dispatch (Sol on the fast lane); no-arg mass-mutation calls (`cancelAllSubscriptions()`, `deleteMany()`, `clearAll()`/`wipeAll()`/…); a real SQL `UPDATE … SET … =` with no genuine `WHERE`; and a line-anchored `GOALPOST-LANE: destructive` directive. It deliberately does **not** block ordinary work — `removeAll(x)`, `UPDATE … WHERE id=?`, or English prose like "update character set". It **cannot** catch natural-language paraphrase ("wipe all rows in the users table") or a self-true `WHERE 1=1`, and it is **pre-dispatch only** — it never sees the shell commands Codex runs at runtime. So the hook is a *second wall*. The **durable** control against GPT-5.6 Sol's documented destructive-action tendency is **least-privilege sandboxing** (Sol / destructive-capable goals run `workspace-write`, never `danger-full-access`) plus a **HUMAN_GATE** on real data destruction. Least privilege is the wall; the token/marker hook rides on top of it.
+
+## Observe your own run
+
+`scripts/telemetry/` turns a finished (or in-flight) run into a report, so you can see how the routing + safety hook actually behaved:
+
+```bash
+# per-goal tiers/escalations from a ledger, hook decisions from the guard log, joined into one report
+node scripts/telemetry/parse-ledger.js  docs/LEDGER-*.md            > /tmp/ledger.json
+node scripts/telemetry/parse-hooklog.js ~/.claude/ops/codex-guard.log > /tmp/hooks.json
+node scripts/telemetry/report.js --ledger docs/LEDGER-*.md \
+     --hooklog ~/.claude/ops/codex-guard.log \
+     --out-json run-report.json --out-md run-report.md
+```
+
+`run-report.md` shows the tier distribution (luna/terra/sol), escalation count, hook allow/block counts, total wall-clock, a best-effort per-tier cost proxy, and any parser warnings. All parsers fail open on malformed/empty *content*, and read no secrets. `scripts/telemetry/validate.js <file>` checks a telemetry file against `schema.json`. (The guard log `~/.claude/ops/codex-guard.log` only exists once the safety hook has run at least once; `report.js` exits non-zero on a `--hooklog` **path** that doesn't exist — by design, so a typo isn't silently reported as an empty run. Omit `--hooklog` to report on the ledger alone.)
 
 ## Prerequisites
 

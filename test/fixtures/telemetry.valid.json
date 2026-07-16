@@ -1,0 +1,13 @@
+{
+  "run_id": "s1-valid",
+  "future_top_level": true,
+  "goals": [
+    {
+      "id": "G1.1",
+      "assigned_tier": "terra",
+      "outcome": "done",
+      "escalations": [],
+      "future_goal_field": "ignored by the validator"
+    }
+  ]
+}

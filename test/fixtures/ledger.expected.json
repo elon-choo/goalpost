@@ -1,0 +1,81 @@
+{
+  "goals": [
+    {
+      "id": "G1.1",
+      "assigned_tier": "terra",
+      "actual_model": "terra",
+      "escalations": [],
+      "outcome": "pending"
+    },
+    {
+      "id": "G1.2",
+      "assigned_tier": "luna",
+      "actual_model": "terra",
+      "escalations": [
+        {
+          "assigned_tier": "luna",
+          "actual_tier": "terra"
+        }
+      ],
+      "outcome": "done",
+      "q": 1,
+      "i": 0,
+      "tier": "terra",
+      "effort": "high",
+      "sandbox": "danger-full-access",
+      "wall_clock_s": 42,
+      "input_tokens": 100000,
+      "output_tokens": 20000
+    },
+    {
+      "id": "G1.3",
+      "assigned_tier": "sol",
+      "actual_model": "sol",
+      "escalations": [],
+      "outcome": "in_progress",
+      "q": 0,
+      "i": 1,
+      "tier": "sol",
+      "effort": "medium",
+      "sandbox": "workspace-write",
+      "wall_clock_s": 90
+    },
+    {
+      "id": "G1.4",
+      "assigned_tier": "terra",
+      "actual_model": "terra",
+      "escalations": [],
+      "outcome": "failed",
+      "q": 2,
+      "i": 0,
+      "tier": "terra",
+      "effort": "high",
+      "sandbox": "workspace-write",
+      "wall_clock_s": 18
+    },
+    {
+      "id": "G1.5",
+      "assigned_tier": "luna",
+      "actual_model": "luna",
+      "escalations": [],
+      "outcome": "done",
+      "q": 0,
+      "i": 0,
+      "tier": "luna",
+      "effort": "low",
+      "sandbox": "read-only"
+    },
+    {
+      "id": "G1.6",
+      "assigned_tier": "sol",
+      "actual_model": "sol",
+      "escalations": [],
+      "outcome": "removed"
+    }
+  ],
+  "warnings": {
+    "non_numeric_dropped": 0,
+    "duplicate_ids": 0,
+    "dropped_rows": 0
+  }
+}

@@ -1,0 +1,2 @@
+this is not a ledger row, a telemetry document, or a guard-log record
+%%% malformed input %%%

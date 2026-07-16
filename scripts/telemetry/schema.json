@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Goalpost run telemetry",
+  "type": "object",
+  "required": ["goals"],
+  "properties": {
+    "run_id": { "type": "string" },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "assigned_tier", "outcome"],
+        "properties": {
+          "id": { "type": "string" },
+          "assigned_tier": { "type": "string" },
+          "actual_model": { "type": "string" },
+          "effort": { "type": "string" },
+          "sandbox": { "type": "string" },
+          "escalations": { "type": "array" },
+          "hook_decisions": { "type": "array" },
+          "wall_clock_s": { "type": "number", "minimum": 0 },
+          "outcome": { "type": "string" },
+          "input_tokens": { "type": "number", "minimum": 0 },
+          "output_tokens": { "type": "number", "minimum": 0 }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0
+
+Observe → improve → release. This version dogfooded the v0.2.1 routing + guardrail by running goalpost on itself: it built a run-telemetry harness, ran a controlled observation with deliberately-tiered synthetic goals + destructive tripwires, measured where the safety hook actually catches vs misses, and hardened the hook against the gaps that surfaced — then shipped the result.
+
+- **Run-telemetry harness (`scripts/telemetry/`).** Parse a ledger's per-goal attempt records + the `~/.claude/ops/codex-guard.log` hook decisions and aggregate them into a `run-report.{json,md}` — tier distribution, escalations, hook allow/block counts, wall-clock, and a per-tier cost proxy. Fail-open on malformed/empty input; reads no secrets. See "Observe your own run" in the README.
+- **Safety-hook hardening (`scripts/codex-safety-gate.sh`), driven by measured gaps.** A controlled observation run confirmed the previous hook caught literal destructive tokens but let paraphrased destruction and mass-mutation calls through. Added, layered under the sandbox wall:
+  - **Sol on the full-access lane** — an explicit `gpt-5.6-sol` dispatch on `danger-full-access` is now blocked (model spelling normalized for case/whitespace/provider-prefix); the everyday default lane is warned, not blocked, to keep ordinary work fast. `codex-reply` is excluded (it inherits the thread's already-gated sandbox).
+  - **Mass-mutation coverage** — no-arg mass-op calls (`cancelAllSubscriptions()`, `deleteMany()`, `clearAll()`/`wipeAll()`/`destroyAll()`/`flushAll()`, …) and a real SQL `UPDATE … SET … =` with no genuine `WHERE` (comparison-operator-aware, comment-stripped, alias-aware) now block on the full-access lane. Ordinary code (`removeAll(x)`, `UPDATE … WHERE id=?`, scoped `deleteMany({where})`) and English prose ("update character set", "clear all caches") do NOT — verified against a false-positive battery.
+  - **Marker precision** — the `GOALPOST-LANE: destructive` marker now matches only as a line-anchored directive, so a prompt that merely *documents* the marker no longer false-positives.
+  - **Override hygiene** — the file override is single-use (consumed after one bypass) and fails closed if it can't be consumed; every use logs a loud WARN.
+- **Honest scope (read this).** The hook is a **partial denylist and a second wall, not a complete destructive-op preventer.** Natural-language paraphrase ("wipe all rows in the users table") and self-true predicates (`WHERE 1=1`) are NOT caught by string matching, and the hook is **pre-dispatch only** — it cannot see the shell commands Codex runs at runtime. The durable control against GPT-5.6 Sol's documented destructive-action tendency is **least-privilege sandboxing** (Sol/destructive-capable work on `workspace-write`, never `danger-full-access`) plus the **HUMAN_GATE** on real data destruction — the prompt/token hook rides on top of that, it does not replace it.
+- Verified: telemetry DoDs re-run first-party; hook change carried through a 3-round adversarial review (68-assertion unit suite, zero ordinary-work false-positive) to an independent GO.
+
 ## 0.2.1
 
 Ship the destructive-action guardrail as a real, optional enforcement hook (it was prose-only in 0.2.0).

@@ -133,6 +133,7 @@ Never widen "implement X" into "and also clean up / reset / delete Y". If you ar
 GOAL: <the one thing this goal must achieve>
 STOP WHEN: <the exact observable condition that ends the turn — e.g. "the named test passes and its output is written to <path>"> — stop there; do not add a verification loop, polish pass, review cycle, or bonus refactor past this line.
 EVIDENCE: <the artifact that proves STOP WHEN was met — a log file, an exit code, a diff>. Return the evidence path; do not claim done without it.
+HARNESS: the check(s) named in STOP WHEN / EVIDENCE are the measuring device — do not edit, skip, special-case, or hardcode around them (or their fixtures/thresholds) to reach STOP WHEN. If a check itself seems wrong, STOP and report instead.
 ```
 The orchestrator's acceptance loop already enforces the EVIDENCE half (first-party verification, no `[x]` without an observed artifact). Adding the explicit STOP WHEN to the prompt is the cheap other half — it keeps a broad instruction from turning into open-ended, destructive-capable roaming.
 
@@ -165,7 +166,7 @@ This is the prose form of a capability manifest — the dispatcher (not the work
 2. **Model availability** — the assigned/floor tier exists on this host. If a HIGH-radius goal needs Sol and Sol is unavailable, `⏸ HUMAN_GATE(model-unavailable)` — the "nearest available" collapse applies only *upward* or among non-critical tiers, never to downgrade a Sol-required goal.
 3. **Capability + sandbox** — destructive-capable (incl. transitive)? → gated lane (§3); else inert fast lane.
 4. **Named targets + STOP WHEN + EVIDENCE** are present and unambiguous; for a destructive edge, **human approval provenance** is present (a real HUMAN_GATE clearance, not goal/spec text). Missing/ambiguous → clarify or gate; do not dispatch on a guess.
-5. **Write set** — for a goal that may run concurrently, the files/resources it writes are declared (used by the parallel scheduler below).
+5. **Write set** — for a goal that may run concurrently, the files/resources it writes are declared (the ledger row's `writes:` field, or the fanout sub-map) — used by the parallel scheduler below; missing/`unknown` serializes.
 
 **Enforcement (prose contract + a real hook):** this checklist and the ledger attempt record are the *prose contract* the orchestrator follows — a plugin is instructions, not a runtime. For *hard* enforcement, a host can add a `PreToolUse` hook on the `mcp__codex__*` calls that blocks a destructive-capable dispatch on the full-access lane. **On this machine that hook is installed** — `~/.claude/hooks/codex-safety-gate.sh` (wired in `settings.json` PreToolUse, matcher `mcp__codex__.*`): it lets `read-only`/`workspace-write` calls through, and on a `danger-full-access` call it strips the delimited guardrail, then blocks (exit 2, with a re-scope instruction) if the task carries a hard destructive token (`rm -rf`, `DROP TABLE`, `DELETE FROM`, `git push --force`, `migrate reset`, …) or the explicit `GOALPOST-LANE: destructive` marker. Override for an intentional one-off: `CODEX_GUARD_OFF=1`. So the guardrail is now a *first* wall (the tool call is refused), not only the prompt-level *second* wall. The durable ladder state still lives on the ledger row (survives compaction). Hosts without the hook fall back to the prose contract alone.
 

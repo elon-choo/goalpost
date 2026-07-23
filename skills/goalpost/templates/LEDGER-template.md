@@ -18,9 +18,10 @@
 - Platform: `[codex]` engineering (executable DoD) · `[claude]` creative/marketing (checklist DoD, fresh reviewer) · `[mixed]` split · `[fanout]` decomposes into independent sub-tasks (per-sub-task tier map, run as one Workflow level).
 - Model tier (append `:tier`): `sol` (`gpt-5.6-sol`) hard+critical only · `terra` (`gpt-5.6-terra`) **default** workhorse · `luna` (`gpt-5.6-luna`) easy+low-variance · `fable`/`opus` for claude. Bare `[codex]`/`[claude]` = UNCLASSIFIED (re-classify before dispatch, never silent-default a security goal to `terra`). `[codex:terra fanout]` = decomposes (sub-map). Optional `/effort` (`:luna/xhigh`) and `pin` (locks tier against the ladder, tie-breaks, `G x.10` regen, and reviewer diffs). A DoD strike escalates one tier up (3-strike cap unchanged).
 - **Attempt record (append to a goal's row on each dispatch):** `q:<quality_strikes> i:<infra_retries> tier:<t> effort:<e> sandbox:<s>` — BOTH counters, so a fresh session after compaction knows whether the goal is one quality strike from the 3-strike gate or just retrying infra, and which tier is next (ladder state must live in the ledger, not lost context). Example: `[~] G1.4 [codex:sol pin] … | q:1 i:0 tier:sol effort:ultra sandbox:workspace-write | evidence:`.
+- **Write set (`writes:`)** — a goal row may declare `| writes: <files/dirs/resources>`; the wave scheduler runs concurrently only goals with disjoint declared write sets, and a missing/`unknown` write set serializes (fail-safe). Goal-level `constraints:` and full scope detail live in the roadmap's goal prompt — the row keeps only the write set.
 
 ## Stage 1 — <title>   (gate: G1.9 review GO)
-- [ ] G1.1 [codex:terra] <one line> | depends: — | DoD: <executable check> | evidence:
+- [ ] G1.1 [codex:terra] <one line> | depends: — | writes: <files/dirs> | DoD: <executable check> | evidence:
 - [ ] G1.2 [claude:fable] <one line> | depends: G1.1 | DoD: production-readiness C-rows, judged by a fresh reviewer | evidence:
 - [ ] G1.3 [codex:luna] <easy/low-variance: fixtures, docs, boilerplate> | depends: G1.1 | DoD: <executable check> | evidence:
 - [ ] G1.4 [codex:sol pin] <hard/critical: auth, migration, security — pinned> | depends: G1.1 | DoD: <executable check> | evidence:

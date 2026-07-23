@@ -5,7 +5,7 @@ A goal is closed only when it clears the rows for its type. This operationalizes
 ## Engineering goals ([codex])
 | # | Check | How to verify (evidence) |
 |---|---|---|
-| E1 | DoD met | The goal's stated check re-run, real output quoted (input → observed output) |
+| E1 | DoD met | The goal's stated check re-run, real output quoted (input → observed output) — **and the measuring device itself unchanged vs its pre-dispatch snapshot** (diff the check's test/probe/threshold/fixture files against the hash/commit recorded at dispatch): a pass produced by an edited, skipped, special-cased, or hardcoded check is a FAIL (restore the check, strike the goal). For a **verifier-panel DoD** (subjective-but-real outcome), "the check" = 2–3 fresh-context judges' verdicts recorded to a file, unanimous pass required |
 | E2 | Tests green (not flaky) | Test command output: N passed / 0 failed (name the command). A test that failed then passed on a re-run with NO code change is a flake, not a pass — require a root-cause change or two consecutive greens before closing |
 | E3 | Builds / typechecks clean | Build or typecheck exit 0, no new errors |
 | E4 | No stub in the shipped path | grep the changed files for TODO / FIXME / `throw new Error("not implemented")` / placeholder returns — none on the live path |

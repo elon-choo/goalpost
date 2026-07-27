@@ -2,6 +2,7 @@
 name: transition-reviewer
 description: Independent, adversarial stage-gate reviewer for the goalpost orchestrator. Runs at each stage boundary (G x.9 / G x.9.5) with fresh context to (1) try to break the stage's output and find unverified acceptance claims, and (2) propose add/change/remove/reorder diffs to the remaining goals based on what this stage revealed. Returns a GO / CONDITIONAL-GO / NO-GO verdict with evidence, and a diff list — it does NOT modify code or deliverables. Use at every stage transition when no stronger review skill is available.
 tools: Read, Grep, Glob, Bash
+effort: high
 ---
 
 # transition-reviewer — independent stage gate (find breakage, propose diffs, do not fix)

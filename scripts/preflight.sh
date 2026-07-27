@@ -26,6 +26,18 @@ else
   say "codex: no cli found — engineering goals fall back to a Claude Code worker (degraded throughput)"
 fi
 
+# --- codex model tiers (routing roster availability) ---
+models_cache="$HOME/.codex/models_cache.json"
+if [ -f "$models_cache" ]; then
+  sol="no"; terra="no"; luna="no"
+  grep -q "gpt-5.6-sol"   "$models_cache" 2>/dev/null && sol="yes"
+  grep -q "gpt-5.6-terra" "$models_cache" 2>/dev/null && terra="yes"
+  grep -q "gpt-5.6-luna"  "$models_cache" 2>/dev/null && luna="yes"
+  say "codex-models: sol=$sol terra=$terra luna=$luna"
+else
+  say "codex-models: unknown (cache not found)"
+fi
+
 # --- review skill (stage gate) ---
 review="bundled (goalpost:transition-reviewer)"
 for d in "$HOME/.claude/skills/adversarial-review" "$HOME/.claude/plugins"/*/skills/adversarial-review; do

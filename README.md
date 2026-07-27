@@ -2,7 +2,7 @@
 
 *A disciplined project manager for an AI coding agent: it breaks a project into small, verified goals, builds them hands-off, and keeps a powerful-but-reckless model on a short leash.*
 
-![version](https://img.shields.io/badge/version-0.3.0-2563eb) ![license](https://img.shields.io/badge/license-MIT-16a34a) ![platform](https://img.shields.io/badge/Claude%20Code-plugin-7c3aed) &nbsp; **Install:** `/plugin install goalpost@goalpost`
+![version](https://img.shields.io/badge/version-0.4.0-2563eb) ![license](https://img.shields.io/badge/license-MIT-16a34a) ![platform](https://img.shields.io/badge/Claude%20Code-plugin-7c3aed) &nbsp; **Install:** `/plugin install goalpost@goalpost`
 
 ---
 
@@ -74,13 +74,15 @@ The ledger makes the whole thing compaction-proof and multi-session: a fresh ses
 
 Not every goal needs the flagship. Running the top model for boilerplate is slower and costlier with no quality gain; running a weak model on a security change is a liability. Goalpost assigns each goal a model tier at plan time and applies it at run time — the full rubric is `skills/goalpost/templates/model-routing.md`.
 
-| Tier | Codex model | Use it for | Default effort |
+| Tier | Model | Use it for | Default effort |
 |---|---|---|---|
 | `sol` | `gpt-5.6-sol` | **Hard + critical only** — security/auth/payments, migrations & destructive-capable work, schema, concurrency/perf, cross-cutting refactors, external-API contracts, architecture, final integration/security review. The escalation ceiling. | `ultra` |
 | `terra` | `gpt-5.6-terra` | **Default workhorse** — feature implementation, API/DB/integration logic, ordinary bug fixes, medium PR review. | `high` |
 | `luna` | `gpt-5.6-luna` | **Easy + low-variance** — boilerplate/CRUD, fixtures/mocks, tests on a pattern, docs, mechanical edits. | `high` / `xhigh` |
+| `fable` | Claude Fable 5 | Judgement — planning, 0→1 design/architecture, adversarial review, creative taste. Never effort-downshifted. | session |
+| `opus` | Claude Opus 5 | **Scoped implementation & edits** (hybrid lane) — well-specified changes to named files, routine creative variants. Runs via `goalpost:goal-worker-scoped`. | `medium` |
 
-Pick the tier by **blast radius × variance**, route on the stronger signal (LOW+LOW → Luna; MED → Terra; HIGH → Sol), and **never downgrade a security/data/payment/migration goal to save cost**. A DoD strike **escalates one tier up** (Luna→Terra→Sol) rather than repeating the same tier; the 3-strike cap is unchanged. Independent, disjoint-file goals — and `[fanout]` goals with a per-sub-task tier map — run concurrently at right-sized tiers via a single Workflow level.
+Pick the tier by **blast radius × variance**, route on the stronger signal (LOW+LOW → Luna; MED → Terra; HIGH → Sol), and **never downgrade a security/data/payment/migration goal to save cost**. A DoD strike **escalates one tier up** (Luna→Terra→Sol) rather than repeating the same tier; the 3-strike cap is unchanged. Independent, disjoint-file goals — and `[fanout]` goals with a per-sub-task tier map — run concurrently at right-sized tiers via a single Workflow level. On the Claude side, `fable` handles judgement/0→1 work and `opus` at `medium` effort handles scoped implementation & edits — grounded in FrontierCode 1.1, where Claude Opus 5 peaks at medium effort on scoped PR-style work and loses points above it to out-of-scope refactors; Codex keeps the parallel-capacity and cross-vendor-verification roles (hybrid, owner decision 2026-07-26).
 
 **Destructive-action safety.** GPT-5.6 Sol is documented to interpret instructions broadly and take destructive actions (deleting files/data, using credentials) unless explicitly forbidden. Goalpost injects an allow/deny guardrail into every Codex dispatch (no deletes/destructive-git/real-sends/credential-use without explicit + human authorization; operate only on *named* targets, never a similar-looking substitute; a binding STOP-WHEN condition), and **isolates any destructive-capable goal into its own gated goal** (`workspace-write` + `on-request`, or a human gate) instead of bundling it. The fast host default is kept only for ordinary edits — the sandbox wall stays under the prompt guardrail on destructive lanes.
 
@@ -159,7 +161,7 @@ claude --plugin-dir ./goalpost
 
 1. Run `claude plugin marketplace add elon-choo/goalpost` (or the full URL `https://github.com/elon-choo/goalpost`).
 2. Run `claude plugin install goalpost@goalpost`.
-3. Verify: `claude plugin details goalpost@goalpost` should list the `goalpost` skill plus 3 commands (`goal`, `roadmap`, `run`) and 2 agents (`goal-worker`, `transition-reviewer`).
+3. Verify: `claude plugin details goalpost@goalpost` should list the `goalpost` skill plus 3 commands (`goal`, `roadmap`, `run`) and 3 agents (`goal-worker`, `goal-worker-scoped`, `transition-reviewer`).
 4. Check capabilities: `bash scripts/preflight.sh` from a clone — it reports whether the **Codex MCP** (the engineering worker) is available. Without it the plugin still works in **Claude-only mode** at lower engineering throughput; tell the user this if Codex is missing.
 5. Tell the user to **restart Claude Code** so the plugin loads.
 

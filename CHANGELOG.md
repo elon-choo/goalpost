@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Claude-side hybrid routing wired (owner decision, 2026-07-26).** `[claude:opus...]` tags now reach a real agent: new `agents/goal-worker-scoped.md` (frontmatter `model: opus`, `effort: medium`) executes scoped implementation & edit goals — grounded in FrontierCode 1.1, where Claude Opus 5 peaks at medium effort on mergeability (53.4% medium vs 48.0% high on Main; above medium it loses points to out-of-scope refactors). `transition-reviewer` pins `effort: high` (verification lane). `templates/model-routing.md` gains a Claude-side routing section (fable = judgement/0→1 — never effort-downshifted; opus/medium = scoped edits; hybrid boundary keeps Codex for parallel capacity + cross-vendor review) and the roster row updates Opus 4.8 → Opus 5; dispatch rules added to `commands/goal.md` and SKILL routing/RUN step 3; PLAN (`commands/roadmap.md` + SKILL step 3) now writes the effort suffix by default (`[codex:terra/high]`, `[claude:opus/medium]`); the Claude-side escalation ladder covers the scoped lane (opus/medium strike → fable).
+- **Preflight reports codex model tiers.** `scripts/preflight.sh` reads `~/.codex/models_cache.json` and prints `codex-models: sol=… terra=… luna=…` (fallback: `unknown (cache not found)`) — implementing the capability line the SKILL/ledger header already referenced.
+- README: version badge synced to plugin.json (0.4.0), routing table gains the Claude rows, agent count 2 → 3.
+
 ## 0.4.0
 
 Stronger goal prompts — grounded in loop-engineering practice for goal/loop modes (the "strong goal" discipline: outcome + verification + constraints + scope + stop conditions, popularized for Codex `/goal` — Dev Roach lecture, 2026-07; cross-checked against OpenAI's published goal-mode guidance). PLAN now front-loads the understanding, and every goal states not just *what done means* but *what it may touch* and *what it must never touch*.

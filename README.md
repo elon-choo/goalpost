@@ -2,7 +2,7 @@
 
 *A disciplined project manager for an AI coding agent: it breaks a project into small, verified goals, builds them hands-off, and keeps a powerful-but-reckless model on a short leash.*
 
-![version](https://img.shields.io/badge/version-0.4.0-2563eb) ![license](https://img.shields.io/badge/license-MIT-16a34a) ![platform](https://img.shields.io/badge/Claude%20Code-plugin-7c3aed) &nbsp; **Install:** `/plugin install goalpost@goalpost`
+![version](https://img.shields.io/badge/version-0.4.1-2563eb) ![license](https://img.shields.io/badge/license-MIT-16a34a) ![platform](https://img.shields.io/badge/Claude%20Code-plugin-7c3aed) &nbsp; **Install:** `/plugin install goalpost@goalpost`
 
 ---
 

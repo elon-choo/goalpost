@@ -1,6 +1,20 @@
 # Changelog
 
-## Unreleased
+## 0.4.1
+
+Eleven operating-policy decisions, made by the owner off a full audit of real goalpost runs (94 ledgers, 11 days of goal-loop logs, 100 past decisions), wired into the spec. Each rule carries its decision provenance inline (`owner decision 2026-08-0X`).
+
+- **Pre-dispatch auto-classification is mandatory.** A goal whose routing tag is missing, bare, or off-roster is classified by blast radius × variance at dispatch and the resolved tier is written back onto its ledger row — the last safety net for goals plan-time tagging missed (audit: 11/18 real ledgers carried zero tags; one PII+credential prod deploy ran on an off-roster tag). SKILL RUN step 3 + routing checklist item 1.
+- **Escalation to Sol is pre-authorized.** A quality-strike ladder that reaches `sol` no longer waits for per-goal owner approval; the counterpart is that an escalated Sol attempt always runs the gated lane, never `danger-full-access`. SKILL escalation + routing ladder.
+- **Review rounds are improvement-keyed, not count-keyed.** A NO-GO keeps iterating fix → re-verify while each round measurably improves; two consecutive flat rounds = a direction problem → `HUMAN_GATE(review-stalled)`. Replaces the fixed NO-GO-equals-gate rule (audit: a 62→78→91 auto-recovery was the success pattern worth standardizing). SKILL stage gate + HUMAN_GATE list.
+- **Fixed gate goals are mandatory in every stage.** `G x.8/.9/.10/.9.5` are part of the stage skeleton; omitting one takes a written `Gates-waived:` line (audit: half of real ledgers shipped without gates). SKILL PLAN step 3 + step 6 audit.
+- **Weak DoDs are auto-rejected.** A goal with no DoD, or a self-certifying one ("file exists"-class), is rejected and rewritten at ledger creation AND at dispatch (new checklist item 4b). SKILL PLAN step 6 + routing checklist.
+- **Parallel-by-default wave scheduling.** Depends-clear goals with provably disjoint write sets fire concurrently by default; serial is the fallback for overlap/unknown, never the default for convenience. SKILL RUN parallelism.
+- **A HUMAN_GATE no longer freezes the whole ledger.** Goals dependency- AND resource-independent of the gated item may start and continue; an unanswered gate is never resolved by defaulting to the recommendation — the owner explicitly chose reminders over timed auto-proceed. SKILL HUMAN_GATE handling.
+- **Quota exhaustion is a standardized infra event.** A 429/usage cap substitutes a worker from the other platform at the SAME DoD, recorded as `[<orig>→<sub>]` on the row; a `sol`-required goal is never substituted down (`HUMAN_GATE(model-unavailable)`). SKILL acceptance loop + routing outcome table.
+- **Full-completion wrap-up is automatic; the next direction is not.** On completion: final report, ledger completion row, pre-authorized deploys — then 2–3 evidence-backed next-ledger candidates posted to the host's async decision channel instead of self-picking a direction. SKILL reporting.
+
+Carried over from unreleased:
 
 - **Claude-side hybrid routing wired (owner decision, 2026-07-26).** `[claude:opus...]` tags now reach a real agent: new `agents/goal-worker-scoped.md` (frontmatter `model: opus`, `effort: medium`) executes scoped implementation & edit goals — grounded in FrontierCode 1.1, where Claude Opus 5 peaks at medium effort on mergeability (53.4% medium vs 48.0% high on Main; above medium it loses points to out-of-scope refactors). `transition-reviewer` pins `effort: high` (verification lane). `templates/model-routing.md` gains a Claude-side routing section (fable = judgement/0→1 — never effort-downshifted; opus/medium = scoped edits; hybrid boundary keeps Codex for parallel capacity + cross-vendor review) and the roster row updates Opus 4.8 → Opus 5; dispatch rules added to `commands/goal.md` and SKILL routing/RUN step 3; PLAN (`commands/roadmap.md` + SKILL step 3) now writes the effort suffix by default (`[codex:terra/high]`, `[claude:opus/medium]`); the Claude-side escalation ladder covers the scoped lane (opus/medium strike → fable).
 - **Preflight reports codex model tiers.** `scripts/preflight.sh` reads `~/.codex/models_cache.json` and prints `codex-models: sol=… terra=… luna=…` (fallback: `unknown (cache not found)`) — implementing the capability line the SKILL/ledger header already referenced.

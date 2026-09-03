@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+- **Scoped worker inherits the session model (owner decision 2026-09-03).** `agents/goal-worker-scoped.md` frontmatter `model: opus` → `model: inherit` (`effort: medium` and tools unchanged): the `[claude:opus...]` lane now runs whatever model the session runs — Fable 5.1 medium on a Fable 5.1 host, which per Anthropic's Fable 5.1 prompting guide roughly matches Fable 5 at lower cost and beats Opus/Sonnet on cost per task at low/medium. The medium-effort finding (FrontierCode 1.1; Opus 5 medium was the 2026-07-26 choice) carries over; the model pin does not. Ledger tag syntax is unchanged and backward compatible — `[claude:opus/medium]` is a routing key to `goal-worker-scoped`, not a model pin (stated where the tag vocabulary is defined in `templates/model-routing.md`; prose updated in README, SKILL, `commands/goal.md`).
+- **Every goal must be drainable without a human reply (owner directive 2026-08-07).** PLAN step 3 now requires each goal to be either an ask/report goal (DoD = *posting* the decision card or report, never receiving the answer) or a goal executable with no owner input; work that genuinely needs an answer sits behind a ⏸ HUMAN_GATE on the later dependent goal (`depends:` naming the ask-goal). A "wait for the reply" DoD is auto-rejected at registration, like a self-certifying one.
+
 ## 0.4.1
 
 Eleven operating-policy decisions, made by the owner off a full audit of real goalpost runs (94 ledgers, 11 days of goal-loop logs, 100 past decisions), wired into the spec. Each rule carries its decision provenance inline (`owner decision 2026-08-0X`).

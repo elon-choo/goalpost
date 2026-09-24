@@ -6,8 +6,40 @@ const fs = require('fs');
 const OUTCOMES = { ' ': 'pending', '~': 'in_progress', x: 'done', X: 'done', '!': 'failed', '-': 'removed' };
 const ATTEMPT_FIELDS = ['q', 'i', 'tier', 'effort', 'sandbox', 'wall_clock_s', 'input_tokens', 'output_tokens'];
 const NUMERIC_FIELDS = ['q', 'i', 'wall_clock_s', 'input_tokens', 'output_tokens'];
-// M-01: escalation ladder — an escalation is only a strictly UP move (luna<terra<sol).
-const LADDER = { luna: 1, terra: 2, sol: 3 };
+// M-01: escalation ladders — an escalation is a strictly UP move WITHIN one ladder, and only
+// after a quality strike (q >= 1): a first classification, a normalization, or an uncertainty
+// re-route (q:0) is never one. Null-prototype maps so __proto__/constructor never rank.
+// - Legacy GPT-5.6 Codex ladder (pre-0.5.0): luna < terra < sol, measured from the FIRST tag in
+//   the row (legacy arrow tags like [codex:luna→terra] recorded an escalation).
+// - 0.5.0 ladder: gpt-6-sol < opus, measured from the LIVE tag (the part after the last →;
+//   0.5.0 arrows record a normalization or re-route, and the attempt `tier:` records escalation).
+// A move across ladders (a legacy terra row normalized to opus) is a re-classification.
+const LEGACY_LADDER = Object.assign(Object.create(null), { luna: 1, terra: 2, sol: 3 });
+const LADDER_050 = Object.assign(Object.create(null), { 'gpt-6-sol': 1, opus: 2 });
+
+function upMove(ladder, from, to) {
+  return ladder[from] !== undefined && ladder[to] !== undefined && ladder[to] > ladder[from];
+}
+
+// Tiers named in a tag, in order: "codex:luna→codex:gpt-6-sol/high" -> ['luna', 'gpt-6-sol'].
+function tagChain(tag) {
+  return tag.split('→').map((part, index) => {
+    if (index === 0) return assignedTier(part);
+    const match = /^\s*(?:[a-z0-9_-]+:)?([a-z0-9_-]+)/i.exec(part);
+    return match ? match[1] : null;
+  }).filter(Boolean);
+}
+
+function escalationBaseline(tag, actual, q) {
+  if (typeof q !== 'number' || q < 1 || tag === undefined) return null;
+  const chain = tagChain(tag);
+  if (chain.length === 0) return null;
+  const first = chain[0];
+  const live = chain[chain.length - 1];
+  if (upMove(LEGACY_LADDER, first, actual)) return first;
+  if (upMove(LADDER_050, live, actual)) return live;
+  return null;
+}
 
 function assignedTier(tag) {
   const match = /^([a-z0-9_-]+):([a-z0-9_-]+)/i.exec(tag.trim());
@@ -57,14 +89,14 @@ function parseLedger(text) {
       : { values: {}, nonNumericDropped: 0 };
     warnings.non_numeric_dropped += nonNumericDropped;
     const actualTier = typeof attempt.tier === 'string' ? attempt.tier : tier;
-    // M-01: count an escalation only on a strict UP move in the ladder; unclassified/untagged
-    // and tiers outside the ladder are skipped (a first classification or a downgrade is not one).
-    const escalated = LADDER[tier] !== undefined && LADDER[actualTier] !== undefined && LADDER[actualTier] > LADDER[tier];
+    // M-01: count an escalation only on a strict UP move within a ladder after a quality strike;
+    // unclassified/untagged and tiers outside the ladders are skipped (see escalationBaseline).
+    const baseline = escalationBaseline(match[3], actualTier, attempt.q);
     const goal = {
       id: match[2],
       assigned_tier: tier,
       actual_model: actualTier,
-      escalations: escalated ? [{ assigned_tier: tier, actual_tier: actualTier }] : [],
+      escalations: baseline ? [{ assigned_tier: baseline, actual_tier: actualTier }] : [],
       outcome: OUTCOMES[match[1]]
     };
     for (const field of ATTEMPT_FIELDS) {

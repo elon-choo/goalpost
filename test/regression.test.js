@@ -2,7 +2,8 @@
 'use strict';
 // Regression checks for adversarial-review round-1 CONFIRMED findings
 // (H-01, H-02, H-03, H-04, H-05, H-06, M-01, M-02, M-03, M-04, L-01)
-// + round-2 findings (H-02R, M-05, L-02, L-03, L-04, L-06).
+// + round-2 findings (H-02R, M-05, L-02, L-03, L-04, L-06)
+// + 0.5.0 routing-tag checks (R5-*: claude:opus / codex:gpt-6-sol lanes, legacy normalization, xverify records).
 // Each check reproduces the red-teamer's input and asserts the fixed behavior.
 
 const fs = require('fs');
@@ -218,6 +219,88 @@ check('L-02 token with declared-lane text keeps git-push prefix; bare declared-l
   l02.decisions[0].token === 'git push origin main declared:lane=destructive'
   && l02.decisions[1].token === 'declared:lane=destructive' && l02.dropped_lines === 0,
   `token0=${JSON.stringify(l02.decisions[0].token)}`);
+
+// ---- 0.5.0 ROUTING TAGS (owner instruction 2026-09-24) ----
+
+// R5-01: the new lane tags parse to their model keys (effort suffix + modifiers ignored).
+const r501 = parseLedger([
+  '- [ ] G15.1 [codex:gpt-6-sol/high] Rename in 4 named files | writes: a.ts b.ts | evidence:',
+  '- [ ] G15.2 [claude:opus/high] Implement the endpoint | evidence:',
+  '- [ ] G15.3 [claude:opus/xhigh pin xverify] Auth refresh + RLS | evidence:',
+  '- [ ] G15.4 [claude:opus/high fanout] Five endpoints | evidence:'
+].join('\n'));
+check('R5-01 new lane tags parse to gpt-6-sol / opus',
+  JSON.stringify(r501.goals.map((goal) => goal.assigned_tier)) === JSON.stringify(['gpt-6-sol', 'opus', 'opus', 'opus']),
+  r501.goals.map((goal) => goal.assigned_tier).join(','));
+
+// R5-02: a Sol strike that comes back to Opus is ONE escalation; Opus -> Sol is a downgrade, never one.
+const r502 = parseLedger([
+  '- [x] G16.1 [codex:gpt-6-sol/high] Mechanical packet | q:1 i:0 tier:opus effort:high sandbox:claude-session |',
+  '- [x] G16.2 [claude:opus/high] Downgrade run | q:0 i:0 tier:gpt-6-sol effort:high sandbox:danger-full-access |',
+  '- [x] G16.3 [claude:opus/high] Same lane, higher effort | q:2 i:0 tier:opus effort:xhigh sandbox:worktree |'
+].join('\n'));
+check('R5-02 gpt-6-sol -> opus counts as 1 escalation', r502.goals[0].escalations.length === 1
+  && r502.goals[0].escalations[0].assigned_tier === 'gpt-6-sol' && r502.goals[0].escalations[0].actual_tier === 'opus');
+check('R5-02 opus -> gpt-6-sol downgrade is NOT an escalation', r502.goals[1].escalations.length === 0);
+check('R5-02 opus high -> opus xhigh (effort only) is NOT a lane escalation', r502.goals[2].escalations.length === 0
+  && r502.goals[2].effort === 'xhigh' && r502.goals[2].sandbox === 'worktree');
+
+// R5-03: legacy tags normalized in arrow form keep their legacy assigned tier; the cross-ladder
+// re-classification (terra/sol -> opus, luna -> gpt-6-sol) is NOT counted as a strike escalation.
+const r503 = parseLedger([
+  '- [x] G17.1 [codex:terra→claude:opus/high] Legacy workhorse row | q:0 i:0 tier:opus effort:high sandbox:claude-session |',
+  '- [x] G17.2 [codex:sol pin→claude:opus/xhigh pin] Legacy flagship row | q:0 i:0 tier:opus effort:xhigh sandbox:worktree |',
+  '- [x] G17.3 [codex:luna→codex:gpt-6-sol/high] Legacy easy row | q:0 i:0 tier:gpt-6-sol effort:high sandbox:danger-full-access |'
+].join('\n'));
+check('R5-03 legacy arrow rows keep legacy assigned tier',
+  JSON.stringify(r503.goals.map((goal) => goal.assigned_tier)) === JSON.stringify(['terra', 'sol', 'luna']));
+check('R5-03 legacy -> 0.5.0 re-classification is not an escalation',
+  r503.goals.every((goal) => goal.escalations.length === 0),
+  r503.goals.map((goal) => goal.escalations.length).join(','));
+check('R5-03 legacy luna->terra (same legacy ladder) still counts', parseLedger('- [x] G17.4 [codex:luna] Old run | q:1 i:0 tier:terra effort:high sandbox:read-only |').goals[0].escalations.length === 1);
+
+// R5-03b (Astra xverify finding): escalation after a normalization is measured from the LIVE tag,
+// and an uncertainty re-route (q:0) is never an escalation.
+const r503b = parseLedger([
+  '- [x] G17.5 [codex:luna→codex:gpt-6-sol/high] Normalized, then Sol struck | q:1 i:0 tier:opus effort:high sandbox:claude-session |',
+  '- [x] G17.6 [codex:gpt-6-sol→claude:opus/high] Sol said "needs a decision" | q:0 i:0 tier:opus effort:high sandbox:claude-session |',
+  '- [x] G17.7 [codex:gpt-6-sol→claude:opus/high] Re-routed, then an Opus-high retry | q:1 i:0 tier:opus effort:high sandbox:claude-session |'
+].join('\n'));
+check('R5-03b luna→gpt-6-sol normalized row that escalated to opus counts 1 (from the live tag)',
+  r503b.goals[0].escalations.length === 1 && r503b.goals[0].escalations[0].assigned_tier === 'gpt-6-sol'
+  && r503b.goals[0].assigned_tier === 'luna');
+check('R5-03b uncertainty re-route gpt-6-sol→opus (q:0) is NOT an escalation', r503b.goals[1].escalations.length === 0);
+check('R5-03b re-routed row retried on the same lane (opus→opus, q:1) is NOT an escalation', r503b.goals[2].escalations.length === 0);
+// Ledger contract (model-routing.md): in 0.5.0 an arrow is a normalization / re-route / quota
+// substitution, never a strike escalation, so a chain ending in the lane that ran is not one.
+const r503c = parseLedger('- [x] G17.8 [codex:luna→codex:gpt-6-sol→claude:opus/high] Normalized, then re-routed | q:1 i:0 tier:opus effort:high sandbox:claude-session |');
+check('R5-03b arrow chain ending at the lane that ran (re-routes, per contract) is NOT an escalation',
+  r503c.goals[0].escalations.length === 0 && r503c.goals[0].assigned_tier === 'luna');
+
+// R5-04: an xverify record segment on the row never hijacks or breaks the attempt record.
+const r504 = parseLedger('- [x] G18.1 [claude:opus/xhigh pin] Payments webhook | q:0 i:1 tier:opus effort:xhigh sandbox:worktree | xverify: gpt-6-astra/max GO → docs/xverify/G18.1.md | evidence: /tmp/goalpost-evidence/G18.1.log');
+check('R5-04 xverify segment leaves the attempt record intact',
+  r504.goals.length === 1 && r504.goals[0].q === 0 && r504.goals[0].i === 1 && r504.goals[0].tier === 'opus'
+  && r504.goals[0].effort === 'xhigh' && r504.warnings.dropped_rows === 0 && r504.goals[0].outcome === 'done');
+
+// R5-05: the shipped LEDGER template's example rows use tags the parser accepts.
+const templateLedger = parseLedger(fs.readFileSync(path.join(ROOT, 'skills/goalpost/templates/LEDGER-template.md'), 'utf8'));
+const templateTiers = Object.fromEntries(templateLedger.goals.map((goal) => [goal.id, goal.assigned_tier]));
+check('R5-05 LEDGER template rows parse with 0.5.0 lanes',
+  templateTiers['G1.1'] === 'opus' && templateTiers['G1.2'] === 'opus' && templateTiers['G1.3'] === 'gpt-6-sol'
+  && templateTiers['G1.4'] === 'opus' && templateTiers['G1.9'] === 'untagged' && templateLedger.warnings.dropped_rows === 0,
+  JSON.stringify(templateTiers));
+
+// R5-06: report buckets the new lanes, reconciles, and labels them best-effort (no published rate here).
+const r506 = buildReport(parseLedger([
+  '- [x] G19.1 [claude:opus/high] A | q:0 i:0 tier:opus effort:high sandbox:claude-session input_tokens:1000 output_tokens:100 |',
+  '- [x] G19.2 [codex:gpt-6-sol/high] B | q:0 i:0 tier:gpt-6-sol effort:high sandbox:danger-full-access |'
+].join('\n')), { decisions: [], dropped_lines: 0 });
+check('R5-06 opus / gpt-6-sol get their own buckets and reconcile',
+  r506.summary.tier_distribution.opus === 1 && r506.summary.tier_distribution['gpt-6-sol'] === 1 && r506.summary.tier_reconciles === true);
+check('R5-06 new lanes are no-rate (best-effort), never priced at the legacy gpt-5.6-sol rate',
+  r506.summary.cost_no_rate_tiers.includes('opus') && r506.summary.cost_no_rate_tiers.includes('gpt-6-sol')
+  && r506.summary.cost_proxy_by_tier.sol === 0);
 
 if (failures) {
   process.stderr.write(`${failures} regression check(s) FAILED\n`);

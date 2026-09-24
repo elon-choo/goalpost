@@ -99,6 +99,9 @@ case "$SANDBOX" in
 esac
 
 # ── Sol model pin: explicit Sol may not enter the exact full-access dispatch lane ──
+# "Sol" here is the legacy GPT-5.6 flagship slug (gpt-5.6-sol), whose documented destructive
+# over-reach this check exists for. GPT-6 Sol (gpt-6-sol, goalpost 0.5.0's low-difficulty lane)
+# is a different model: it is not matched here and relies on the token/marker scan below.
 # codex-reply inherits its thread's sandbox/model, so it is deliberately excluded
 # from this model check while remaining subject to the legacy destructive scan below.
 if [ "$SANDBOX" = "danger-full-access" ] &&

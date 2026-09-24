@@ -2,7 +2,7 @@
 
 A goal is closed only when it clears the rows for its type. This operationalizes "don't advance until it's actually right." Every row is pass/fail on observable evidence, not opinion. Cite the evidence next to each row in the goal's ledger entry (or the worker's return).
 
-## Engineering goals ([codex])
+## Engineering goals (either platform — before 0.5.0, the `[codex]` goals)
 | # | Check | How to verify (evidence) |
 |---|---|---|
 | E1 | DoD met | The goal's stated check re-run, real output quoted (input → observed output) — **and the measuring device itself unchanged vs its pre-dispatch snapshot** (diff the check's test/probe/threshold/fixture files against the hash/commit recorded at dispatch): a pass produced by an edited, skipped, special-cased, or hardcoded check is a FAIL (restore the check, strike the goal). For a **verifier-panel DoD** (subjective-but-real outcome), "the check" = 2–3 fresh-context judges' verdicts recorded to a file, unanimous pass required |
@@ -11,11 +11,11 @@ A goal is closed only when it clears the rows for its type. This operationalizes
 | E4 | No stub in the shipped path | grep the changed files for TODO / FIXME / `throw new Error("not implemented")` / placeholder returns — none on the live path |
 | E5 | Errors handled at real boundaries | External input / API / IO failure paths handled (not swallowed, not fabricated); no error handling invented for cases that can't occur |
 | E6 | No secrets / no destructive side effects | No keys/tokens committed; no files/data/DBs deleted or truncated, no row-level/bulk data destruction (`DELETE FROM`, mass `UPDATE`, data-rewrite migration), no destructive git, no real sends/deploys/payments unless the goal explicitly authorizes them AND a human approved. For a destructive-capable (incl. transitive) goal, the evidence is a **before/after state audit the orchestrator read** — `git status`/a file manifest diff and, where relevant, an egress/command audit — NOT just a green test log (a passing test does not prove nothing was deleted or sent). A destructive capability must have run as its own isolated, gated goal — not bundled here (principle 9) |
-| E7 | Working code protected | Existing working code changed only within scope, with stated reason; no opportunistic refactor. The Codex worker ran with the allow/deny guardrail and did not widen "implement X" into deleting/resetting Y |
+| E7 | Working code protected | Existing working code changed only within scope, with stated reason; no opportunistic refactor. The worker (Opus subagent or Codex) ran with the allow/deny guardrail and did not widen "implement X" into deleting/resetting Y |
 | E8 | Docs/types synced | Public signatures, config, and any user-facing docs updated to match the change |
-| E9 | Model fit — under-tiering blocks, over-tiering is audit-only | **Enforced (a real failure):** a HIGH-blast-radius goal (security/data/payment/irreversible-migration) must NOT have run on a tier below its Sol floor — but this is caught **before dispatch** (planner/reviewer), never a reason to fail-close a goal that already passed every product check. **Audit-only (never a BLOCK):** running a higher tier than needed is logged as cost telemetry, not a completeness failure — do not re-run a passing goal on a cheaper tier (that adds risk for no completeness gain). Record the tier used + any escalation |
+| E9 | Model fit — under-routing blocks, over-routing is audit-only | **Enforced (a real failure):** a HIGH-blast-radius goal (security/data/payment/irreversible-migration) must have run on `claude:opus/xhigh pin` (pinned goals are never quota-substituted) **and** carry a GPT-6 Astra cross-verification record whose confirmed findings are closed (`xverify:` on the row); an unpinned goal that ran on a recorded quota substitute carries that substitution and its fresh Claude review; a `codex:gpt-6-sol` goal must have passed the Sol-eligibility gate. Lane mistakes are caught **before dispatch** (planner/reviewer) — a missing Astra record on a pinned goal is closed by running the cross-verification now, never by re-running a passing goal on another lane. **Audit-only (never a BLOCK):** a settled mechanical packet run on Opus instead of Sol is logged as throughput/cost telemetry, not a completeness failure. Record the lane used + any escalation |
 
-## Creative / marketing goals ([claude])
+## Creative / marketing / planning goals (before 0.5.0, the `[claude]` goals)
 These rows are judgement calls, so they are scored by a **fresh-context reviewer, never by the context that wrote the deliverable** (an author does not pass their own creative work).
 
 | # | Check | How to verify (evidence) |

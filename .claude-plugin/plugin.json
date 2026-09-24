@@ -1,8 +1,8 @@
 {
   "name": "goalpost",
   "displayName": "Goalpost — autonomous goal orchestrator",
-  "version": "0.4.2",
-  "description": "Plan a project as a stage x goal roadmap with hard per-goal acceptance gates, then run it hands-off: a persistent ledger drives an orchestrator that delegates engineering goals to the Codex MCP (right-sized across GPT-5.6 Sol/Terra/Luna by task blast-radius) and creative/marketing goals to Claude Code, verifying every goal's Definition of Done before advancing, escalating a tier on failure, isolating destructive operations behind approval gates, and stopping only at genuine human-decision gates.",
+  "version": "0.5.0",
+  "description": "Plan a project as a stage x goal roadmap with hard per-goal acceptance gates, then run it hands-off: a persistent ledger drives an orchestrator that runs medium-or-harder engineering and all creative/planning goals on Claude Opus 5.5, hands settled mechanical packets to GPT-6 Sol through the Codex MCP, and has GPT-6 Astra cross-verify every stage boundary and every consequential goal — verifying every goal's Definition of Done before advancing, escalating up the lane ladder on failure, isolating destructive operations behind approval gates, and stopping only at genuine human-decision gates.",
   "author": {
     "name": "funnelbank.ai"
   },
@@ -19,6 +19,7 @@
     "agents",
     "definition-of-done",
     "model-routing",
-    "gpt-5.6"
+    "claude-opus-5-5",
+    "gpt-6"
   ]
 }
